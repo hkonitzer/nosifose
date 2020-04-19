@@ -1,0 +1,19 @@
+{
+  "server": {
+    "port": 3000
+  },
+  "redis": {
+    "port": 6379,
+    "host": "localhost",
+    "family": 6,
+    "db": 0
+  },
+  "session": {
+    "secret": "nosifose!",
+    "cookie": {
+      "secure": false,
+      "httpOnly": true,
+      "maxAge": 63072000000
+    }
+  }
+}
