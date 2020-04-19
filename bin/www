@@ -17,7 +17,7 @@ const config = require('../lib/config');
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort( config.get("server").port || process.env.PORT);
+const port = normalizePort( process.env.PORT || config.get("server").port);
 app.set('port', port);
 
 /**
