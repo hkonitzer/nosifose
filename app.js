@@ -26,6 +26,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// CORS config
+if (config.get('server')['cors'] === true) {
+  log.debug(`Configure cors with origin ${config.get('server')['cors-origin']} `);
+  const cors = require('cors');
+  app.options('*', cors())
+  app.use(cors({
+    origin: config.get('server')['cors-origin'], //"https://voegeli.voransicht.online',
+    allowedHeaders: ['Origin, X-Requested-With, Content-Type, Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
+  }));
+}
 // Init Sessionstore
 let redisClient = redis.createClient({
   port: config.get('redis').port,

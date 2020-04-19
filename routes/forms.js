@@ -41,7 +41,7 @@ router.post('/contact', [
   // @TODO: send sanitized data in an email or persist in a db
 
   return res.status(201).send({
-    data: req.body,
+    data: data,
     errors: null,
     errorMap: null
   });
