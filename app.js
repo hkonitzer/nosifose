@@ -27,7 +27,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // CORS config
-if (config.get('server')['cors'] === true) {
+if (config.get('server')['cors'] && config.get('server')['cors'] === true) {
   log.debug(`Configure cors with origin ${config.get('server')['cors-origin']} `);
   const cors = require('cors');
   app.options('*', cors())
