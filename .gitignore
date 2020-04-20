@@ -141,3 +141,6 @@ knexfile.js
 
 # Settings
 settings.json
+
+# Schemas
+schemas/*.js
