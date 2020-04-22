@@ -55,7 +55,6 @@ const rateLimiterMiddleware = (req, res, next) => {
     rateLimiterRedis.consume(req.ip)
         .then((rateLimiterResponse) => {
             setRateLimiterHeaders(res, rateLimiterResponse);
-            console.log(rateLimiterResponse);
             next();
         })
         .catch((rateLimiterResponse) => {
