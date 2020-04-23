@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+
+// Templating
+const Handlebars = require('handlebars');
+
+// HTML Validator
+const HTMLValidator = require('html-validator');
+
+const throwError = function(msg) {
+    console.error(msg);
+    process.exit(1);
+};
+
+// read all schemas
+const fs = require('fs');
+const path = require('path');
+const FOLDER_PATH = './schemas';
+const schemaFiles = fs.readdirSync(FOLDER_PATH).filter(fileName => {
+    return fs.lstatSync(path.join(FOLDER_PATH, fileName)).isFile() && fileName.endsWith('js');
+});
+
+if (schemaFiles.length) {
+    console.log(`${schemaFiles.length} schema file(s) found`);
+} else {
+    console.error(`No schema files found in directory "${FOLDER_PATH}"!`);
+    process.exit(1);
+}
+
+for (let s in schemaFiles) {
+    const schema = require(path.join(__dirname, '..', FOLDER_PATH, schemaFiles[s]));
+    const endpoint = '/' + schemaFiles[s].substring(0, schemaFiles[s].lastIndexOf('.'));
+    console.log(`Check endpoint "${endpoint}"`);
+    const markup = schema.markup;
+    // Test markup.html
+    if (markup.html.length === 0) {
+        throwError('markup.html is empty');
+    }
+    if (!markup.html.startsWith('<!DOCTYPE html><html')) {
+        throwError('markup.html should start with <!DOCTYPE html><html: ', markup.html);
+    }
+    //@TODO test html
+    // Test: actionURL
+    if (!markup.variables.actionUrl.length) throwError('variables.actionUrl is missing');
+    const htmlTemplate = Handlebars.compile(markup.html);
+    (async () => {
+        const result = await HTMLValidator({
+            data: htmlTemplate(markup.variables)
+        })
+        const resultJson = JSON.parse(result)
+        for (let m = 0, mx = resultJson.messages.length; m < mx; ++m) {
+            console.log(resultJson.messages[m])
+        }
+    })()
+}
+
