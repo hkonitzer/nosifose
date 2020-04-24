@@ -71,5 +71,9 @@ module.exports = {
       actionUrl: 'http://localhost:3000/forms/contact',
     }
   },
+  recaptcha: {
+    "site_key": "<your-reCAPTCHA-site_key>",
+    "secret_key": "<your-reCAPTCHA-secret_key>"
+  },
   callback: './callbacks/contact.js'
 }
