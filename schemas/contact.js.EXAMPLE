@@ -1,3 +1,4 @@
+const Handlebars = require('handlebars');
 module.exports = {
   definition: {
     message: {
@@ -17,13 +18,58 @@ module.exports = {
     }
   },
   markup: {
-    message: {
-      label: "Enter your message",
-      type: "text"
-    },
-    email: {
-      label: "Enter your email",
-      type: "text"
+    formHtml: `<!DOCTYPE html><html lang="{{lang}}">
+            <head><title>contact</title>{{css}}{{{recaptcha}}}</head>
+            <body class="iframe_background">
+                <main id="main_iframe">
+                    <section class="post">
+                        <div class="content">
+                            {{#if errors.length}}
+                            <ul class="errors_list">
+                              {{#each errors}}
+                                <li>{{this.msg}}</li>
+                              {{/each}}
+                            </ul>
+                            {{/if}}
+                            <form method="post" action="{{actionUrl}}">{{html}}<input type="hidden" name="_csrf" value="{{csrfToken}}">
+                              <label for="message">Nachricht:</label>
+                              <input type="text" name="message" id="message" value="{{formData.message}}">
+                              <label for="email">E-Mail:</label>
+                              <input type="text" name="email" id="email" value="{{formData.email}}">
+                              <button type="submit">Absenden</button>
+                            </form>
+                         </div>
+                    </section>                    
+                </main>
+                <script>
+                function rccb(token){ // recaptcha callback
+                  var input = document.createElement('input');
+                  input.setAttribute('type', 'hidden');
+                  input.setAttribute('name', 'g-recaptcha-response');
+                  input.setAttribute('value', token);
+                  document.getElementsByTagName('form')[0].appendChild(input);
+                }
+                </script>
+            </body>
+            </html>`,
+    responseHtml: `<!DOCTYPE html><html lang="{{lang}}">
+            <head><title>contact</title>{{css}}</head>
+            <body class="iframe_background">
+                <main id="main_iframe">
+                    <section class="post">
+                        <div class="content">
+                            <p>Thanks!</p>
+                            <p>See your e-mail inbox for {{formData.email}}</p>
+                         </div>
+                    </section>                    
+                </main>
+            </body>
+            </html>`,
+    variables: {
+      lang: 'de',
+      css: new Handlebars.SafeString('<link rel="stylesheet" type="text/css" href="http://<my-ghost-server>/assets/main/css/main.css"/>'),
+      actionUrl: 'http://localhost:3000/forms/contact',
     }
-  }
+  },
+  callback: './callbacks/contact.js'
 }

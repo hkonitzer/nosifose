@@ -1,80 +1,91 @@
 const express = require('express');
 const router = express.Router();
 const log = require('../lib/logging');
+const config = require('../lib/config');
 // Init CSRF
-const csrf = require('csurf');
-const csrfProtection = csrf({ cookie: false });
-
+const Csrf = require('csurf');
+const csrfProtection = Csrf({ cookie: false });
+// Validator
 const { check, validationResult, matchedData } = require('express-validator');
 const { checkSchema } = require('express-validator');
+// Templating
+const Handlebars = require('handlebars');
+// Init reCAPTCHA
+const Recaptcha = require('express-recaptcha').RecaptchaV3;
 
 // read all schemas
 const fs = require('fs');
 const path = require('path');
-const FOLDER_PATH = './schemas';
-const schemaFiles = fs.readdirSync(FOLDER_PATH).filter(fileName => {
-  return fs.lstatSync(path.join(FOLDER_PATH, fileName)).isFile() && fileName.endsWith('js');
+const SCHEMA_FOLDER_PATH = './schemas';
+const schemaFiles = fs.readdirSync(SCHEMA_FOLDER_PATH).filter(fileName => {
+  return fs.lstatSync(path.join(SCHEMA_FOLDER_PATH, fileName)).isFile() && fileName.endsWith('js');
 });
 
 if (schemaFiles.length) {
   log.debug(`${schemaFiles.length} schema file(s) found`);
 } else {
-  log.error(`No schema files found in directory "${FOLDER_PATH}"!`);
+  log.error(`No schema files found in directory "${SCHEMA_FOLDER_PATH}"!`);
   process.exit(1);
 }
 
-const buildAndSendResponse = function(req, res, html, message = "", jsonPaylod = null, responseCode = 200) {
-  let _html = `<html><head></head><body><div class="formMessage">${message}</div><form method="post" action="${req.originalUrl}">${html}<input type="hidden" name="_csrf" value="${req.csrfToken()}"></form>`; //
-  if (jsonPaylod !== null) {
-    _html+=`<script>let formJSONPayload = ${JSON.stringify(jsonPaylod)}</script>`;
-  }
-  _html+='</body></html>';
+const buildAndSendResponse = function(req, res, htmlTemplate, handleBarsInput = {}, responseCode = 200) {
   res.set('Content-Type', 'text/html');
-  return res.status(responseCode).send(_html);
+  const data = handleBarsInput;
+  data.csrfToken = req.csrfToken();
+  data.recaptcha = res.recaptcha || '';
+  // formData
+  data.formData = req.body || {};
+  delete data.formData._csrf;
+  return res.status(responseCode).send(htmlTemplate(data));
 };
 
 for (let s in schemaFiles) {
-  const schema = require(path.join(__dirname, '..', FOLDER_PATH, schemaFiles[s]));
+  const schema = require(path.join(__dirname, '..', SCHEMA_FOLDER_PATH, schemaFiles[s]));
   const endpoint = '/' + schemaFiles[s].substring(0, schemaFiles[s].lastIndexOf('.'));
   log.debug(`Installing endpoint "${endpoint}"`);
-
-  // built form
-  let html = `<!--start ${endpoint} -->`;
-  for (let name in schema.markup) {
-    //console.log(name, schema.markup[name])
-    html+=`<label for="${name}">${schema.markup[name].label}</label>`
-    html+=`<input type="${schema.markup[name].type}" id="${name}" name="${name}">`;
-  }
-  html += `<button type="submit">Submit</button>`;
-  html += `<!--end ${endpoint} -->`;
+  // Prepare reCAPTACHA
+  const recaptcha = new Recaptcha(
+      config.get('recaptcha').site_key, // SITE KEY
+      config.get('recaptcha').secret_key, // SECRET KEY
+      {
+        callback: 'rccb'
+        ,action: endpoint.substring(1)
+        //,onload: 'rcol'
+      });
+  // Prepare HTML
+  const markup = schema.markup;
+  const formHtmlTemplate = Handlebars.compile(markup.formHtml);
+  const responseHtmlTemplate = Handlebars.compile(markup.responseHtml);
+  const handleBarsInput = markup.variables;
+  // require the given callback
+  log.debug(`Requiring callback ${schema.callback}`)
+  const callback = require(path.join(__dirname, '..', schema.callback));
 
   // GET
-  router.get(endpoint, csrfProtection, (req, res) => {
-    return buildAndSendResponse(req, res, html)
+  router.get(endpoint, csrfProtection, recaptcha.middleware.render, (req, res) => {
+    return buildAndSendResponse(req, res, formHtmlTemplate, handleBarsInput)
   });
+
   // POST
-  router.post(endpoint, checkSchema(schema.definition), csrfProtection, (req, res) => {
+  router.post(endpoint, checkSchema(schema.definition), csrfProtection, recaptcha.middleware.render, (req, res) => {
     const errors = validationResult(req);
+    const data = handleBarsInput;
+    data.formData = req.body;
     if (!errors.isEmpty()) {
-      return buildAndSendResponse(req, res, html, "FEHLER!", { errors: errors.array() }, 400);
-
-      /*
-      delete req.body._csrf;
-      return res.status(400).send({
-        data: req.body,
-        errors: errors.array(),
-        errorMap: errors.mapped()
-      });
-      */
+      data.errors = errors.array();
+      return buildAndSendResponse(req, res, formHtmlTemplate, data,400);
     }
-
-    const data = matchedData(req);
-    console.log('Sanitized: ', data)
-    // @TODO: send sanitized data in an email or persist in a db
-
-    return res.status(201).send(`<html><head></head><body><div>Daten übertragen!</div></body></html>`);
+    // get reCAPTCHA response (error or data with score)
+    const rcData = { error: null, data: null };
+    recaptcha.verify(req, function(error, data){
+      rcData.error = error; // we dont not react on reCAPTCHA errors, transfer them to the callback and handle any errors there
+      rcData.data = data; // will be something like: { hostname: 'localhost', score: 0.9, action: 'contact' }
+    });
+    // @TODO: check callback return value for errors
+    callback(matchedData(req), rcData);
+    return buildAndSendResponse(req, res, responseHtmlTemplate, data,201);
   });
-
 }
 
 module.exports = router;
+

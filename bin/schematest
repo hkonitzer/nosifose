@@ -32,24 +32,40 @@ for (let s in schemaFiles) {
     console.log(`Check endpoint "${endpoint}"`);
     const markup = schema.markup;
     // Test markup.html
-    if (markup.html.length === 0) {
+    if (markup.formHtml.length === 0) {
         throwError('markup.html is empty');
-    }
-    if (!markup.html.startsWith('<!DOCTYPE html><html')) {
-        throwError('markup.html should start with <!DOCTYPE html><html: ', markup.html);
     }
     //@TODO test html
     // Test: actionURL
     if (!markup.variables.actionUrl.length) throwError('variables.actionUrl is missing');
-    const htmlTemplate = Handlebars.compile(markup.html);
+    const formHtmlTemplate = Handlebars.compile(markup.formHtml);
     (async () => {
         const result = await HTMLValidator({
-            data: htmlTemplate(markup.variables)
+            data: formHtmlTemplate(markup.variables)
         })
         const resultJson = JSON.parse(result)
-        for (let m = 0, mx = resultJson.messages.length; m < mx; ++m) {
-            console.log(resultJson.messages[m])
+        if (resultJson.messages.length) {
+            console.log('Results formHTML:')
+            for (let m = 0, mx = resultJson.messages.length; m < mx; ++m) {
+                console.log(resultJson.messages[m]);
+            }
+            console.log('\n++++++++++++++++++++++++\n');
+        }
+    })();
+    const responseHtmlTemplate = Handlebars.compile(markup.responseHtml);
+    (async () => {
+        const result = await HTMLValidator({
+            data: responseHtmlTemplate(markup.variables)
+        })
+        const resultJson = JSON.parse(result)
+        if (resultJson.messages.length) {
+            console.log('Results responseHtml:')
+            for (let m = 0, mx = resultJson.messages.length; m < mx; ++m) {
+                console.log(resultJson.messages[m]);
+            }
+            console.log('\n++++++++++++++++++++++++\n');
         }
     })()
+
 }
 

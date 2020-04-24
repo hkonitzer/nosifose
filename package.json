@@ -1,7 +1,7 @@
 {
   "name": "nosifose",
   "description": "NodeJS Simple Form Server",
-  "version": "0.0.2",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
@@ -14,6 +14,7 @@
     "debug": "^4.1.1",
     "ejs": "~2.6.1",
     "express": "~4.16.1",
+    "express-recaptcha": "^5.0.1",
     "express-session": "^1.17.1",
     "express-validator": "^6.4.0",
     "handlebars": "^4.7.6",
@@ -24,5 +25,15 @@
     "nconf": "^0.10.0",
     "rate-limiter-flexible": "^2.1.4",
     "redis": "^3.0.2"
-  }
+  },
+  "author": {
+    "name": "Hendrik Schellenberger",
+    "email": "hkonitzer@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hkonitzer/nosifose.git"
+  },
+  "bugs": "https://github.com/hkonitzer/nosifose/issues",
+  "license": "MIT"
 }
