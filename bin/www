@@ -1,17 +1,16 @@
 #!/usr/bin/env node
+/**
+ * Config
+ */
+const config = require('../lib/config');
 
 /**
  * Module dependencies.
  */
 
-const app = require('../app');
+const app = require('../app')(config);
 const debug = require('debug')('nosifose:server');
 const http = require('http');
-
-/**
- * Config
- */
-const config = require('../lib/config');
 
 /**
  * Get port from environment and store in Express.

@@ -100,4 +100,10 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+module.exports = (config) => {
+  if (!config) {
+      debug('YOu have to provide a config (as nconf object)');
+      process.exit(2);
+  }
+  return app;
+}

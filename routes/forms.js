@@ -40,7 +40,9 @@ const buildAndSendResponse = function(req, res, htmlTemplate, handleBarsInput = 
 };
 
 for (let s in schemaFiles) {
-  const schema = require(path.join(__dirname, '..', SCHEMA_FOLDER_PATH, schemaFiles[s]));
+  const schemaLocation = path.join(path.resolve('.'), SCHEMA_FOLDER_PATH, schemaFiles[s]);
+  log.debug(`Loading schema "${schemaLocation}`)
+  const schema = require(schemaLocation);
   const endpoint = '/' + schemaFiles[s].substring(0, schemaFiles[s].lastIndexOf('.'));
   log.debug(`Installing endpoint "${endpoint}"`);
   // Prepare reCAPTACHA
@@ -58,8 +60,8 @@ for (let s in schemaFiles) {
   const responseHtmlTemplate = Handlebars.compile(markup.responseHtml);
   const handleBarsInput = markup.variables;
   // require the given callback
-  log.debug(`Requiring callback ${schema.callback}`)
-  const callback = require(path.join(__dirname, '..', schema.callback));
+  log.debug(`Requiring callback "${schema.callback}"`)
+  const callback = require(path.join(path.resolve('.'), schema.callback));
 
   // GET
   router.get(endpoint, csrfProtection, recaptcha.middleware.render, (req, res) => {
