@@ -17,5 +17,9 @@
       "httpOnly": true,
       "maxAge": 63072000000
     }
+  },
+  "recaptcha": {
+    "site_key": "<your-reCAPTCHA-site_key>",
+    "secret_key": "<your-reCAPTCHA-secret_key>"
   }
 }
