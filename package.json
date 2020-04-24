@@ -1,7 +1,12 @@
 {
   "name": "nosifose",
   "description": "NodeJS Simple Form Server",
-  "version": "0.9.0",
+  "keywords": [
+    "nodejs",
+    "forms-builder",
+    "forms"
+  ],
+  "version": "0.9.1",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
@@ -35,5 +40,8 @@
     "url": "https://github.com/hkonitzer/nosifose.git"
   },
   "bugs": "https://github.com/hkonitzer/nosifose/issues",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=10"
+  }
 }

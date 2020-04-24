@@ -12,7 +12,6 @@ const log = require('./lib/logging');
 
 const config = require('./lib/config');
 
-const indexRouter = require('./routes/index');
 const formsRouter = require('./routes/forms');
 
 const app = express();
@@ -83,7 +82,6 @@ if (app.get('env') === 'development') {
 
 app.use(require('./routes/middleware/rateLimiterRedis'));
 
-app.use('/', indexRouter);
 app.use('/forms', formsRouter);
 
 // catch 404 and forward to error handler
