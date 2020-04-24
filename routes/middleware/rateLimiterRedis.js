@@ -25,7 +25,7 @@ const redisClient = redis.createClient({
 });
 
 redisClient.on('error', (err) => {
-    error(err);
+    log.error(err);
     process.exit(1);
 });
 redisClient.on('ready', (connD) => {
