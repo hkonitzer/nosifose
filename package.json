@@ -7,7 +7,7 @@
     "forms",
     "expressjs"
   ],
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "main": "app.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "cors": "^2.8.5",
     "csurf": "^1.11.0",
     "debug": "^4.1.1",
-    "ejs": "~2.7.4",
+    "ejs": "~3.1.2",
     "express": "~4.17.1",
     "express-recaptcha": "^5.0.1",
     "express-session": "^1.17.1",
@@ -28,8 +28,8 @@
     "handlebars": "^4.7.6",
     "helmet": "^3.22.0",
     "html-validator": "^5.1.8",
-    "http-errors": "~1.6.3",
-    "morgan": "~1.9.1",
+    "http-errors": "~1.7",
+    "morgan": "~1.10",
     "nconf": "^0.10.0",
     "rate-limiter-flexible": "^2.1.4",
     "redis": "^3.0.2"
