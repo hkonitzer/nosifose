@@ -12,24 +12,20 @@ const log = require('./lib/logging');
 
 const formsRouter = require('./routes/forms');
 
-
-module.exports = (config) => {
+const route = (config, app) => {
     if (!config) {
         debug('YOu have to provide a config (as nconf object)');
         process.exit(2);
     }
-    const app = express();
-    // view engine setup
-    app.set('views', path.join(__dirname, 'views'));
-    app.set('view engine', 'ejs');
-    app.use(helmet({
-        frameguard: false
-    }));
-    app.use(logger('dev'));
+    // Express standards
     app.use(express.json());
     app.use(express.urlencoded({extended: false}));
     app.use(cookieParser());
-    app.use(express.static(path.join(__dirname, 'public')));
+
+    // Helmet (security)
+    app.use(helmet({
+        frameguard: false // we use iframes here!
+    }));
 
     // CORS config
     if (config.get('server')['cors'] && config.get('server')['cors'] === true) {
@@ -37,7 +33,7 @@ module.exports = (config) => {
         const cors = require('cors');
         app.options('*', cors())
         app.use(cors({
-            origin: config.get('server')['cors-origin'], //"https://voegeli.voransicht.online',
+            origin: config.get('server')['cors-origin'],
             allowedHeaders: ['Origin, X-Requested-With, Content-Type, Accept'],
             exposedHeaders: ['Content-Range', 'X-Content-Range']
         }));
@@ -88,6 +84,26 @@ module.exports = (config) => {
 
     app.use('/forms', formsRouter);
 
+    return app;
+}
+
+const server = (config) => {
+    if (!config) {
+        debug('YOu have to provide a config (as nconf object)');
+        process.exit(2);
+    }
+    const app = express();
+    // view engine setup
+    app.set('views', path.join(__dirname, 'views'));
+    app.set('view engine', 'ejs');
+
+    if (app.get('env') === 'development') {
+        app.use(logger('dev'));
+    }
+
+    // install the actual express route for the nosifose api
+    route(config, app);
+
     // catch 404 and forward to error handler
     app.use(function (req, res, next) {
         next(createError(404));
@@ -105,3 +121,8 @@ module.exports = (config) => {
     });
     return app;
 }
+
+module.exports = {
+    server: server,
+    route: route
+};
