@@ -1,4 +1,4 @@
-module.exports = (formData, recaptchaData) => {
+module.exports = async (formData, recaptchaData) => {
     console.log('contact.js CALLBACK:\n', formData, recaptchaData);
-    return true;
+    return ({ message: 'Okay', errors: null });
 }

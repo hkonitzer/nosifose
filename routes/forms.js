@@ -106,6 +106,8 @@ for (let s in schemaFiles) {
         recaptchaPromiseFunction(req).then((rcData) => {
             return callback(matchedData(req), rcData);
         }).then((callbackData) => {
+            // Add the given object from the callback funtion to the template data
+            data.callbackData = callbackData;
             return buildAndSendResponse(req, res, responseHtmlTemplate, data, 201);
         });
     });

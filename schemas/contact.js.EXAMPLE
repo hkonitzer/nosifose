@@ -59,7 +59,18 @@ module.exports = {
                     <section class="post">
                         <div class="content">
                             <p>Thanks!</p>
-                            <p>See your e-mail inbox for {{formData.email}}</p>
+                            {{#if callbackData.message}}
+                                <p>{{callbackData.message}}</p>
+                            {{/if}}
+                            {{#if callbackData.errors.length}}
+                              <ul class="errors_list">
+                                {{#each callbackData.errors}}
+                                  <li>{{this.msg}}</li>
+                                {{/each}}
+                              </ul>
+                            {{else}}
+                                <p>See your E-Mail inbox for {{formData.email}}</p>  
+                            {{/if}}
                          </div>
                     </section>                    
                 </main>
