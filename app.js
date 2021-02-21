@@ -14,7 +14,7 @@ const formsRouter = require('./routes/forms');
 
 const route = (config, app) => {
     if (!config) {
-        debug('YOu have to provide a config (as nconf object)');
+        log.error('You have to provide a config (as nconf object)');
         process.exit(2);
     }
     // Express standards
@@ -48,7 +48,7 @@ const route = (config, app) => {
         showFriendlyErrorStack: (app.get('env') === 'development')
     });
     redisClient.on('ready', function () {
-        log.debug('Redis Sessionstore ready');
+        log.debug('Redis session store ready');
     });
     if (app.get('env') === 'production') {
         app.set('trust proxy', 1); // trust first proxy
@@ -80,16 +80,20 @@ const route = (config, app) => {
         });
     }
 
-    app.use(require('./routes/middleware/rateLimiterRedis')(config));
-
-    app.use('/forms', formsRouter);
+    //RateLimiter
+    if (app.get('env') !== 'development') {
+        app.use(require('./routes/middleware/rateLimiterRedis')(config));
+    }
+    let path = config.get('server')['path'] || '/forms';
+    log.debug(`Installing route under path ${path} `);
+    app.use(path, formsRouter);
 
     return app;
 }
 
 const server = (config) => {
     if (!config) {
-        debug('YOu have to provide a config (as nconf object)');
+        log.error('You have to provide a config (as nconf object)');
         process.exit(2);
     }
     const app = express();
