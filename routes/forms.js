@@ -28,7 +28,19 @@ if (schemaFiles.length) {
     process.exit(1);
 }
 
-const buildAndSendResponse = function (req, res, htmlTemplate, handleBarsInput = {}, responseCode = 200) {
+const redirect = (req, res, url, urlParams = null, responseCode = 303) => {
+    if (urlParams !== null) {
+        let  queryParamArray = [];
+        for (let responseURLParamsObjectKey in urlParams) {
+            queryParamArray.push(`${responseURLParamsObjectKey}=${urlParams[responseURLParamsObjectKey]}`);
+        }
+        const queryParamString = '?' + queryParamArray.join('&');
+        url+=queryParamString;
+    }
+    return res.redirect(responseCode, url);
+}
+
+const buildAndSendResponse = (req, res, htmlTemplate, handleBarsInput = {}, responseCode = 200) => {
     res.set('Content-Type', 'text/html');
     const data = handleBarsInput;
     data.csrfToken = req.csrfToken();
@@ -64,7 +76,19 @@ for (let s in schemaFiles) {
     // Prepare HTML
     const markup = schema.markup;
     const formHtmlTemplate = Handlebars.compile(markup.formHtml);
-    const responseHtmlTemplate = Handlebars.compile(markup.responseHtml);
+    // Either html response or an url
+    let responseHtmlTemplate = null;
+    let responseURL = null;
+    // Has the schema an query params object defined? Use this, but beware: If the callback function provides this
+    // object (responseURLParamsObject), it will be used in favor of the schema definition
+    const responseURLParamsObjectFromSchema = typeof markup.responseURLParamsObject === 'object' ? markup.responseURLParamsObject : null;
+    if (typeof markup.responseHtml === 'string') {
+        log.debug(`Using HTML for the response`);
+        responseHtmlTemplate = Handlebars.compile(markup.responseHtml);
+    } else {
+        log.debug(`Using URL "${markup.responseURL}" for the response`);
+        responseURL = markup.responseURL;
+    }
     const handleBarsInput = markup.variables;
     // require the given callback
     log.debug(`Requiring callback "${schema.callback}"`)
@@ -84,8 +108,16 @@ for (let s in schemaFiles) {
         const data = handleBarsInput;
         data.formData = req.body;
         if (!errors.isEmpty()) {
-            data.errors = errors.array();
-            return buildAndSendResponse(req, res, formHtmlTemplate, data, 400);
+            if (responseHtmlTemplate) {
+                data.errors = errors.array();
+                return buildAndSendResponse(req, res, formHtmlTemplate, data, 400);
+            } else {
+                return redirect(req,
+                    res,
+                    responseURL,
+                    typeof callbackData.responseURLParamsObject === 'object' ? callbackData.responseURLParamsObject : responseURLParamsObjectFromSchema,
+                    400);
+            }
         }
         // get reCAPTCHA response (error or data with score)
         // build a function for with promises for this
@@ -106,9 +138,16 @@ for (let s in schemaFiles) {
         recaptchaPromiseFunction(req).then((rcData) => {
             return callback(matchedData(req), rcData);
         }).then((callbackData) => {
-            // Add the given object from the callback funtion to the template data
-            data.callbackData = callbackData;
-            return buildAndSendResponse(req, res, responseHtmlTemplate, data, 201);
+            if (responseHtmlTemplate) {
+                // Add the given object from the callback function to the template data
+                data.callbackData = callbackData;
+                return buildAndSendResponse(req, res, responseHtmlTemplate, data, 201);
+            } else {
+                return redirect(req,
+                    res,
+                    responseURL,
+                    typeof callbackData.responseURLParamsObject === 'object' ? callbackData.responseURLParamsObject : responseURLParamsObjectFromSchema);
+            }
         });
     });
 }
