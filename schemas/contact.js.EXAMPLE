@@ -82,6 +82,9 @@ module.exports = {
       actionUrl: 'http://localhost:3000/forms/contact',
     }
   },
+  options: {
+    "csrf": true
+  },
   recaptcha: {
     "site_key": "<your-reCAPTCHA-site_key>",
     "secret_key": "<your-reCAPTCHA-secret_key>"

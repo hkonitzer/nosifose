@@ -73,6 +73,9 @@ for (let s in schemaFiles) {
         getMiddlewares.push(recaptcha.middleware.render);
         postMiddlewares.push(recaptcha.middleware.render);
     }
+    // Load options from schema
+    const schemaOptions = schema.options || { "csrf": false };
+    const useCSRF = (schemaOptions.csrf === true);
     // Prepare HTML
     const markup = schema.markup;
     const formHtmlTemplate = Handlebars.compile(markup.formHtml);
@@ -95,13 +98,17 @@ for (let s in schemaFiles) {
     const callback = require(path.join(path.resolve('.'), schema.callback));
 
     // GET
-    getMiddlewares.push(csrfProtection);
+    if (useCSRF) {
+        getMiddlewares.push(csrfProtection);
+    }
     router.get(endpoint, getMiddlewares, (req, res) => {
         return buildAndSendResponse(req, res, formHtmlTemplate, handleBarsInput)
     });
 
     // POST
-    postMiddlewares.push(csrfProtection);
+    if (useCSRF) {
+        postMiddlewares.push(csrfProtection);
+    }
     postMiddlewares.push(checkSchema(schema.definition));
     router.post(endpoint, postMiddlewares, (req, res) => {
         const errors = validationResult(req);
