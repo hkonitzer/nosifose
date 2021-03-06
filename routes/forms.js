@@ -43,13 +43,13 @@ const redirect = (req, res, url, urlParams = null, responseCode = 303) => {
 const buildAndSendResponse = (req, res, htmlTemplate, handleBarsInput = {}, responseCode = 200) => {
     res.set('Content-Type', 'text/html');
     const data = handleBarsInput;
+    // formData
+    data.formData = req.body || {};
     if (req.csrfToken) {
         data.csrfToken = req.csrfToken();
         delete data.formData._csrf;
     }
     data.recaptcha = res.recaptcha || '';
-    // formData
-    data.formData = req.body || {};
     return res.status(responseCode).send(htmlTemplate(data));
 };
 
