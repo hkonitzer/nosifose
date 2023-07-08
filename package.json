@@ -27,7 +27,7 @@
     "express-validator": "^6.4.0",
     "handlebars": "^4.7.6",
     "helmet": "^3.22.0",
-    "html-validator": "^5.1.8",
+    "html-validator": "^6.0.1",
     "http-errors": "~1.7",
     "morgan": "~1.10",
     "nconf": "^0.10.0",
